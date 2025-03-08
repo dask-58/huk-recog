@@ -11,6 +11,9 @@ from datetime import datetime
 import psycopg2
 from dotenv import load_dotenv
 import pickle
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
@@ -161,6 +164,53 @@ def update_attendance_in_db(attendance):
     finally:
         conn.close()
 
+def send_absence_emails(attendance_data):
+    sender_email = "badam152.hukum@gmail.com"
+    sender_password = "atsk hzvc chkg dnpb"
+    
+    # Get present roll numbers from attendance data
+    present_rolls = set(str(roll) for roll in attendance_data.get("detected_names", []) if str(roll).isdigit())
+    
+    # Generate all valid roll numbers (excluding 14 and 53)
+    all_roll_numbers = {str(i).zfill(3) for i in range(1, 71)} - {'014', '053'}
+    
+    # Find absentees
+    absent_rolls = all_roll_numbers - present_rolls
+    
+    for roll in absent_rolls:
+        receiver_email = f"23bcs{roll}@iiitdwd.ac.in"
+        
+        subject = "⚠️ Attendance Alert: Absence Notification"
+        body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <p>Dear <b>23BCS{roll}</b>,</p>
+            <p>We noticed that you were marked <b style="color:red;">absent</b> for today's class session. Regular attendance is crucial for your academic progress.</p>
+            <p>If you were <b style="color:green;">present</b> in the class, we are extremely sorry (machines make mistakes). Please inform the discrepancy to the respected faculty.</p>
+            <br>
+            <p>Best Regards,</p>
+            <p><b>Faculty, Hukum Organization</b></p>
+            <p style="font-size: 12px; color: gray;">This is an automated email. Please do not reply.</p>
+        </body>
+        </html>
+        """
+        
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'html'))
+
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+            server.quit()
+            print(f"✅ Email sent to {receiver_email}")
+        except Exception as e:
+            print(f"❌ Failed to send email to {receiver_email}: {e}")
+
 @app.route('/update_attendance', methods=['GET'])
 def update_attendance_route():
     try:
@@ -181,6 +231,9 @@ def update_attendance_route():
 
         # Update attendance in the database
         update_attendance_in_db(attendance)
+
+        # Send emails to absentees
+        send_absence_emails(attendance)
 
         # Return the attendance data as a response
         return jsonify(attendance)
