@@ -190,4 +190,4 @@ def update_attendance_route():
 
 if __name__ == "__main__":
     # Run the Flask app in debug mode (for development)
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True, port=5001)
