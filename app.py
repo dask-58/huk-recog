@@ -62,7 +62,7 @@ def poll_images(num_images=4):
                 file_url = poll_data["fileUrl"]
             else:
                 file_url = f"https://{APP_ID}.ufs.sh/f/{file_key}"
-                print(f"Warning: fileUrl not found in response. Constructed URL: {file_url}")
+                # print(f"Warning: fileUrl not found in response. Constructed URL: {file_url}")
             image_urls.append(file_url)
             print(f"  - URL: {file_url}")
         
@@ -166,7 +166,7 @@ def update_attendance_in_db(attendance):
 
 def send_absence_emails(attendance_data):
     sender_email = "badam152.hukum@gmail.com"
-    sender_password = "atsk hzvc chkg dnpb"
+    sender_password = "atskhzvcchkgdnpb"
     
     # Get present roll numbers from attendance data
     present_rolls = set(str(roll) for roll in attendance_data.get("detected_names", []) if str(roll).isdigit())
@@ -180,7 +180,7 @@ def send_absence_emails(attendance_data):
     for roll in absent_rolls:
         receiver_email = f"23bcs{roll}@iiitdwd.ac.in"
         
-        subject = "⚠️ Attendance Alert: Absence Notification"
+        subject = "TEST Alert from HUKUM: Absence Notification"
         body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -191,6 +191,7 @@ def send_absence_emails(attendance_data):
             <p>Best Regards,</p>
             <p><b>Faculty, Hukum Organization</b></p>
             <p style="font-size: 12px; color: gray;">This is an automated email. Please do not reply.</p>
+            <p style="font-size: 12px; color: gray;">This is a test from HUKUM. PLEASE ignore.</p>
         </body>
         </html>
         """
