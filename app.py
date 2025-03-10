@@ -135,7 +135,9 @@ def update_attendance_in_db(attendance):
     dt = datetime.fromisoformat(timestamp)
     date_field = f"date_{dt.year}_{dt.month:02d}_{dt.day:02d}"
     print(f"Updating attendance for date field: {date_field}")
+    
     try:
+        # Convert valid roll strings to integers (roll numbers)
         present_rolls = [int(roll) for roll in detected_rolls if roll.isdigit()]
     except Exception as e:
         print("Error converting roll numbers to integers:", e)
@@ -149,17 +151,103 @@ def update_attendance_in_db(attendance):
 
     try:
         with conn.cursor() as cur:
-            query = f'''
+            # Update the Attendance table for today's class.
+            attendance_query = f'''
                 UPDATE "Attendance" 
                 SET {date_field} = CASE 
                     WHEN "studentRollNo" = ANY(%s) THEN %s::"AttendanceStatus" 
                     ELSE %s::"AttendanceStatus" 
                 END
             '''
-            cur.execute(query, (present_rolls, "Present", "Absent"))
+            cur.execute(attendance_query, (present_rolls, "Present", "Absent"))
+
+            # Update attendancePercentage column.
+            attendance_percentage_query = '''
+                UPDATE "Attendance"
+                SET "attendancePercentage" =
+                    CASE
+                      WHEN total_classes = 0 THEN 0
+                      ELSE present_count * 100.0 / total_classes
+                    END
+                FROM (
+                    SELECT "studentRollNo",
+                        (
+                            (CASE WHEN "date_2025_03_01" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_02" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_03" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_04" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_05" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_06" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_07" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_08" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_09" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_10" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_11" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_12" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_13" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_14" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_15" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_16" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_17" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_18" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_19" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_20" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_21" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_22" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_23" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_24" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_25" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_26" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_27" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_28" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_29" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_30" IS NOT NULL THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_31" IS NOT NULL THEN 1 ELSE 0 END)
+                        ) AS total_classes,
+                        (
+                            (CASE WHEN "date_2025_03_01" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_02" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_03" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_04" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_05" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_06" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_07" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_08" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_09" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_10" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_11" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_12" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_13" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_14" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_15" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_16" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_17" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_18" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_19" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_20" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_21" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_22" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_23" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_24" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_25" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_26" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_27" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_28" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_29" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_30" = 'Present' THEN 1 ELSE 0 END) +
+                            (CASE WHEN "date_2025_03_31" = 'Present' THEN 1 ELSE 0 END)
+                        ) AS present_count
+                    FROM "Attendance"
+                ) sub
+                WHERE "Attendance"."studentRollNo" = sub."studentRollNo";
+            '''
+            cur.execute(attendance_percentage_query)
+
         conn.commit()
         print("Attendance update completed.")
+        print("Attendance percentage update completed.")
     except Exception as e:
+        conn.rollback()
         print("Error occurred while updating attendance:", e)
     finally:
         conn.close()
@@ -234,7 +322,7 @@ def update_attendance_route():
         update_attendance_in_db(attendance)
 
         # Send emails to absentees
-        send_absence_emails(attendance)
+        # send_absence_emails(attendance)
 
         # Return the attendance data as a response
         return jsonify(attendance)
